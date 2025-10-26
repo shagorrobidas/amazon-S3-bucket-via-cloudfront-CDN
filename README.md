@@ -110,3 +110,181 @@
 <p align="center">
   <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/20.webp?raw=true" alt="Amazon S3 with CloudFront">
 </p>
+
+#### We have to paste above Cloud front distribution policy to S3 bucket policy
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/21.webp?raw=true" alt="Amazon S3 with CloudFront">
+</p>
+
+
+#### Click on edit button and paste the copied policy and click on save changes
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/22.webp?raw=true" alt="Amazon S3 with CloudFront">
+</p>
+
+#### Now let’s upload an text file to our bucket and try to see it’s content by cloudfront CDN
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/23.webp?raw=true" alt="Uploading file to S3">
+</p>
+
+#### Select file and click on upload button
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/24.webp?raw=true" alt="Uploading file to S3 bucket">
+</p>
+
+#### After file uploading we will be redirected to list file page
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/25.webp?raw=true" alt="Uploaded files list page">
+</p>
+
+#### Click on a.txt to open file details
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/26.webp?raw=true" alt="Getting deatils of a S3 object">
+</p>
+
+#### Now open object URL in new tab, then you will get something like Access Denied because our S3 bucket is private
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/27.webp?raw=true" alt="Getting access denied becaue bucket is private">
+</p>
+
+#### Now Let’s replace S3 base URL by cloudfront distribution name.
+#### here we are able to see the S3 bucket content because we have added cloudfront policy in S3 bucket policy.
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/28.webp?raw=true" alt="Access S3 private file access by cloudfront distribution domain name">
+</p>
+
+  ## Now Let’s Implement that in Django code base
+  Make sure to install and add these dependencies to your ```requirements.txt``` :
+
+```
+  Django==4.2.15
+  django-storages==1.14.4
+  boto3==1.35.10
+  python-decouple==3.8
+```
+  
+#### Create a file storage_backends.py next to your settings.py file and put below code in it:
+```
+  from django.conf import settings
+  from storages.backends.s3boto3 import S3Boto3Storage
+  
+  
+  class StaticStorage(S3Boto3Storage):
+      location = 'staticfiles'
+  
+  class PublicMediaStorage(S3Boto3Storage):
+      location = 'media'
+      file_overwrite = False
+```
+
+####  In settings.py
+```
+  USE_S3 = True
+  
+  if USE_S3:
+      # aws settings
+      AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+      AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+      AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+      AWS_S3_REGION_NAME = "us-east-1"
+      AWS_S3_CUSTOM_DOMAIN = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+      CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME = config('CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME', default=None)
+      AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+  
+      if CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME:
+          AWS_S3_CUSTOM_DOMAIN = CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME
+  
+      # s3 static settings
+      AWS_LOCATION = 'staticfiles'
+      STATIC_URL = f'{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
+      STATICFILES_STORAGE = 'Smart_blogging_system.storage_backends.StaticStorage'
+      # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+      
+      # s3 public media settings
+      PUBLIC_MEDIA_LOCATION = 'media'
+      MEDIA_URL = f'{AWS_S3_CUSTOM_DOMAIN}/{PUBLIC_MEDIA_LOCATION}/'
+      DEFAULT_FILE_STORAGE = 'Smart_blogging_system.storage_backends.PublicMediaStorage'
+  else:
+      STATIC_URL = '/staticfiles/'
+      STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+  
+      MEDIA_URL = '/media/'
+      MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+```
+
+
+#### Set below variable in your .env file with their accurate value. below i have provided some dummy values
+
+````
+AWS_ACCESS_KEY_ID="AWS IAM USER ACCESS_KEY_ID"
+AWS_SECRET_ACCESS_KEY="AWS IAM USER SECRET_ACCESS_KEY"
+AWS_STORAGE_BUCKET_NAME="AWS s3 BUCKET NAME"
+CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME="CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME without https://"
+````
+
+#### After that we have to run
+``` python3 manage.py collectstatic ```
+
+#### after running collectstatic command all the files will be uploaded to S3
+
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/29.webp?raw=true" alt="uploading static files to S3 by collect static command">
+</p>
+
+#### Let’s open Django default admin panel, and you will be able to see that our static files are getting loaded from cloudfront
+
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/30.webp?raw=true" alt="static files loading from cloudfront">
+</p>
+
+
+#### In the Normal user UI also we can see that media files are also getting loaded from cloudfront.
+
+
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/31.webp?raw=true" alt="static files loading from cloudfront">
+</p>
+
+
+### Now let’s understand the concept of cache Invalidation in cloudfront CDN
+<p><strong> Let’s change our base.html body background color to greenyellow and see whether our changes are getting reflected or not. </strong></p>
+
+<p>I have changed base.css but still back-ground color is coming as yellow. i have uploaded the updated base.css file on S3 also. Still our changes are not getting reflected. for getting updated changes we will have to create cache invalidation.</p>
+
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/32.webp?raw=true" alt="Creating cache invalidation"><br>
+  <span style="font-size:11px;">Creating cache invalidation</span>
+</p>
+
+### here we have specified the pattern to Invalidate everything
+
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/33.webp?raw=true" alt="Creating cache invalidation"><br>
+  <span style="font-size:11px;">Creating cache invalidation</span>
+</p>
+
+### After completion of our cache Invalidation we will be able to see updated css code
+
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/34.webp?raw=true" alt="Creating cache invalidation"><br>
+  <span style="font-size:11px;">Applying regex for cache invalidation</span>
+</p>
+
+### Old base.css file
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/34.webp?raw=true" alt="Creating cache invalidation"><br>
+  <span style="font-size:11px;">static file by cloudfront cache invalidation concept</span>
+</p>
+
+
+### Updated base.css file
+<p align="center">
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/34.webp?raw=true" alt="Creating cache invalidation"><br>
+  <span style="font-size:11px;">updated static file by cloudfront cache invalidation concept</span>
+</p>
+
+## Conclusion
+<p>
+  Finally, We have successfully configured S3 and Cloud front to server our django static and media fields.
+</p>
+
