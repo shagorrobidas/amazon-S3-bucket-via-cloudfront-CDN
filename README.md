@@ -272,14 +272,14 @@ CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME="CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME without
 
 ### Old base.css file
 <p align="center">
-  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/34.webp?raw=true" alt="Creating cache invalidation"><br>
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/35.webp?raw=true" alt="Creating cache invalidation"><br>
   <span style="font-size:11px;">static file by cloudfront cache invalidation concept</span>
 </p>
 
 
 ### Updated base.css file
 <p align="center">
-  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/34.webp?raw=true" alt="Creating cache invalidation"><br>
+  <img src="https://github.com/shagorrobidas/amazon-S3-bucket-via-cloudfront-CDN/blob/main/image/36.webp?raw=true" alt="Creating cache invalidation"><br>
   <span style="font-size:11px;">updated static file by cloudfront cache invalidation concept</span>
 </p>
 
